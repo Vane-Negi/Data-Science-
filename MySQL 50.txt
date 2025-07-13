@@ -1,0 +1,266 @@
+-- 1. Create a database named college_db
+CREATE DATABASE college_db;
+
+-- 2. Create a table students
+USE college_db;
+CREATE TABLE students (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    age INT,
+    department VARCHAR(50)
+);
+
+-- 3. Insert 5 records
+INSERT INTO students VALUES
+(1, 'Vaibhav', 21, 'Computer Science'),
+(2, 'Rishu', 19, 'Mathematics'),
+(3, 'Lucky', 22, 'Physics'),
+(4, 'Bhawana', 20, 'Biology'),
+(5, 'Negi', 24, 'Computer Science');
+
+-- 4. Fetch all records
+SELECT * FROM students;
+
+-- 5. Students whose age > 20
+SELECT * FROM students WHERE age > 20;
+
+-- 6. Update department where name is ‘John’
+UPDATE students SET department = 'Chemistry' WHERE name = 'Bhawana';
+
+-- 7. Delete student with ID 3
+DELETE FROM students WHERE id = 3;
+
+-- 8. Order by age descending
+SELECT * FROM students ORDER BY age DESC;
+
+-- 9. Distinct departments
+SELECT DISTINCT department FROM students;
+
+-- 10. Count students
+SELECT COUNT(*) AS total_students FROM students;
+
+-- 11. Rename students table
+RENAME TABLE students TO student_info;
+
+-- 12. Add email column
+ALTER TABLE student_info ADD COLUMN email VARCHAR(100);
+
+-- 13. Name starts with ‘A’
+SELECT * FROM student_info WHERE name LIKE 'A%';
+
+-- 14. Age between 18 and 25
+SELECT * FROM student_info WHERE age BETWEEN 18 AND 25;
+
+-- 15. Student with highest age
+SELECT * FROM student_info ORDER BY age DESC LIMIT 1;
+
+-- 16. First 3 students
+SELECT * FROM student_info LIMIT 3;
+
+-- 17. Create courses table
+CREATE TABLE courses (
+    course_id INT PRIMARY KEY,
+    course_name VARCHAR(50),
+    credits INT
+);
+
+-- 18. Insert 3 records
+INSERT INTO courses VALUES
+(101, 'DBMS', 4),
+(102, 'OOP', 3),
+(103, 'DSA', 4);
+
+-- 19. Students from ‘Computer Science’
+SELECT * FROM student_info WHERE department = 'Computer Science';
+
+-- 20. Students from specific departments
+SELECT * FROM student_info WHERE department IN ('Computer Science', 'Mathematics');
+
+-- 21. Students aged between 20 and 30
+SELECT * FROM student_info WHERE age BETWEEN 20 AND 30;
+
+-- 22. Current date and time
+SELECT NOW();
+
+-- 23. Rename column in SELECT
+SELECT name AS student_name, age FROM student_info;
+
+-- 24. Exclude a department
+SELECT * FROM student_info WHERE department != 'Biology';
+
+-- 25. Delete all records without dropping table
+DELETE FROM student_info;
+
+-- 26. Create marks table
+CREATE TABLE marks (
+    student_id INT,
+    subject VARCHAR(50),
+    marks INT
+);
+
+-- 27. Insert 5 records
+INSERT INTO marks VALUES
+(1, 'DBMS', 85),
+(2, 'Maths', 78),
+(1, 'OOP', 90),
+(4, 'Biology', 70),
+(5, 'DBMS', 95);
+
+-- 28. JOIN students and marks
+SELECT s.name, m.subject, m.marks
+FROM student_info s
+JOIN marks m ON s.id = m.student_id;
+
+-- 29. Average marks per student
+SELECT student_id, AVG(marks) AS avg_marks
+FROM marks
+GROUP BY student_id;
+
+-- 30. Total marks by each student
+SELECT student_id, SUM(marks) AS total_marks
+FROM marks
+GROUP BY student_id;
+
+-- 31. Students scoring more than 200
+SELECT student_id, SUM(marks) AS total
+FROM marks
+GROUP BY student_id
+HAVING total > 200;
+
+-- 32. Students with same age
+SELECT age, COUNT(*) AS count
+FROM student_info
+GROUP BY age
+HAVING count > 1;
+
+-- 33. INNER, LEFT, RIGHT JOIN
+-- INNER JOIN: Only matching records
+-- LEFT JOIN: All from left + matches from right
+-- RIGHT JOIN: All from right + matches from left
+
+-- INNER JOIN example
+SELECT s.name, m.subject FROM student_info s
+INNER JOIN marks m ON s.id = m.student_id;
+
+-- LEFT JOIN
+SELECT s.name, m.subject FROM student_info s
+LEFT JOIN marks m ON s.id = m.student_id;
+
+-- RIGHT JOIN
+SELECT s.name, m.subject FROM student_info s
+RIGHT JOIN marks m ON s.id = m.student_id;
+
+-- 34. Table with PRIMARY KEY & AUTO_INCREMENT
+CREATE TABLE departments (
+    dept_id INT AUTO_INCREMENT PRIMARY KEY,
+    dept_name VARCHAR(50)
+);
+
+-- 35. Table with FOREIGN KEY
+CREATE TABLE enrollments (
+    enroll_id INT PRIMARY KEY,
+    student_id INT,
+    course_id INT,
+    FOREIGN KEY (student_id) REFERENCES student_info(id),
+    FOREIGN KEY (course_id) REFERENCES courses(course_id)
+);
+
+-- 36. Subquery: max marks
+SELECT MAX(marks) FROM marks;
+
+-- 37. View for student names & total marks
+CREATE VIEW student_totals AS
+SELECT s.name, SUM(m.marks) AS total_marks
+FROM student_info s
+JOIN marks m ON s.id = m.student_id
+GROUP BY s.name;
+
+-- 38. Students scoring above average
+SELECT * FROM marks
+WHERE marks > (SELECT AVG(marks) FROM marks);
+
+-- 39. Stored procedure to insert student
+DELIMITER //
+CREATE PROCEDURE add_student(IN sid INT, IN sname VARCHAR(50), IN sage INT, IN sdept VARCHAR(50))
+BEGIN
+    INSERT INTO student_info (id, name, age, department)
+    VALUES (sid, sname, sage, sdept);
+END;
+//
+DELIMITER ;
+
+-- 40. Stored procedure to update department
+DELIMITER //
+CREATE PROCEDURE update_dept(IN sid INT, IN new_dept VARCHAR(50))
+BEGIN
+    UPDATE student_info SET department = new_dept WHERE id = sid;
+END;
+//
+DELIMITER ;
+
+-- 41. User-defined function for grade
+DELIMITER //
+CREATE FUNCTION get_grade(m INT)
+RETURNS VARCHAR(2)
+DETERMINISTIC
+BEGIN
+    IF m >= 90 THEN RETURN 'A';
+    ELSEIF m >= 75 THEN RETURN 'B';
+    ELSE RETURN 'C';
+    END IF;
+END;
+//
+DELIMITER ;
+
+-- 42. Trigger to log inserts
+CREATE TABLE student_log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_name VARCHAR(50),
+    action_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DELIMITER //
+CREATE TRIGGER log_insert AFTER INSERT ON student_info
+FOR EACH ROW
+BEGIN
+    INSERT INTO student_log(student_name) VALUES (NEW.name);
+END;
+//
+DELIMITER ;
+
+-- 43. Transaction for multiple updates
+START TRANSACTION;
+UPDATE student_info SET age = age + 1 WHERE department = 'Computer Science';
+UPDATE student_info SET age = age + 1 WHERE department = 'Mathematics';
+COMMIT;
+
+-- 44. Find duplicates
+SELECT name, COUNT(*) FROM student_info
+GROUP BY name
+HAVING COUNT(*) > 1;
+
+-- 45. Backup database
+-- Command line: 
+-- mysqldump -u root -p college_db > college_db_backup.sql
+
+-- 46. Restore database
+-- Command line:
+-- mysql -u root -p college_db < college_db_backup.sql
+
+-- 47. Import CSV
+-- LOAD DATA INFILE '/path/to/file.csv'
+-- INTO TABLE student_info
+-- FIELDS TERMINATED BY ',' 
+-- LINES TERMINATED BY '\n'
+-- IGNORE 1 ROWS;
+
+-- 48. Create index on name
+CREATE INDEX idx_name ON student_info(name);
+
+-- 49. Second highest mark
+SELECT MAX(marks) FROM marks
+WHERE marks < (SELECT MAX(marks) FROM marks);
+
+-- 50. Drop courses table
+DROP TABLE courses;
+-- Effect: All data in 'courses' table is permanently deleted
